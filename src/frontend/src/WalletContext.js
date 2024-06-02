@@ -9,6 +9,8 @@ export const WalletProvider = ({ children }) => {
     const [wallet, setWallet] = useState(null);
     const [account, setAccount] = useState(null);
     const [role, setRole] = useState(null);
+    const [position, setPosition] = useState(null);
+
 
     useEffect(() => {
         async function init() {
@@ -33,6 +35,7 @@ export const WalletProvider = ({ children }) => {
         wallet.signOut();
         setAccount(null);
         setRole(null);
+        setPosition(null);
     };
 
     useEffect(() => {
@@ -50,8 +53,41 @@ export const WalletProvider = ({ children }) => {
         fetchAccount();
     }, [wallet]);
 
+    const joinQueue = async () => {
+        if (account) {
+            try {
+                const response = await axios.post('http://localhost:5000/queue/join', { user_id: account });
+                setPosition(response.data.position);
+            } catch (error) {
+                console.error(error.response.data.error);
+            }
+        }
+    };
+
+    const getPosition = async () => {
+        if (account) {
+            const response = await axios.get(`http://localhost:5000/queue/position/${account}`);
+            setPosition(response.data.position);
+        }
+    };
+
+    const advanceQueue = async () => {
+        await axios.post('http://localhost:5000/queue/advance');
+        setPosition(null);
+    };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (account) {
+                getPosition();
+            }
+        }, 5000); // Check position every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [account]);
+
     return (
-        <WalletContext.Provider value={{ wallet, account, role, signIn, signOut }}>
+        <WalletContext.Provider value={{ wallet, account, role, position, signIn, signOut, joinQueue, advanceQueue }}>
             {children}
         </WalletContext.Provider>
     );
