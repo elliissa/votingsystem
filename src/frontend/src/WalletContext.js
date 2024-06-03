@@ -31,7 +31,10 @@ export const WalletProvider = ({ children }) => {
         wallet.requestSignIn(nearConfig.contractName);
     };
 
-    const signOut = () => {
+    const signOut = async () => {
+        if (account) {
+            await advanceQueue();
+        }
         wallet.signOut();
         setAccount(null);
         setRole(null);
@@ -72,8 +75,14 @@ export const WalletProvider = ({ children }) => {
     };
 
     const advanceQueue = async () => {
-        await axios.post('http://localhost:5000/queue/advance');
-        setPosition(null);
+        if (account) {
+            try {
+                await axios.post('http://localhost:5000/queue/advance', { user_id: account });
+                setPosition(null);
+            } catch (error) {
+                console.error(error.response.data.error);
+            }
+        }
     };
 
     useEffect(() => {

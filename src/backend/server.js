@@ -84,19 +84,25 @@ app.get('/queue/position/:accountId', async (req, res) => {
 });
 
 app.post('/queue/advance', async (req, res) => {
+    const { user_id } = req.body;
+
     try {
-        const result = await pool.query('SELECT user_id FROM queue WHERE position = 1');
-        if (result.rows.length === 0) {
-            return res.status(400).json({ error: 'Queue is empty' });
+        const result = await pool.query('SELECT position FROM queue WHERE user_id = $1', [user_id]);
+
+        if (result.rowCount === 0) {
+            return res.status(400).json({ error: 'User is not in the queue' });
         }
 
-        const user_id = result.rows[0].user_id;
+        const userPosition = result.rows[0].position;
+
         await pool.query('DELETE FROM queue WHERE user_id = $1', [user_id]);
-        await pool.query('UPDATE queue SET position = position - 1 WHERE position > 1');
-        res.json({ message: 'Queue advanced' });
+
+        await pool.query('UPDATE queue SET position = position - 1 WHERE position > $1', [userPosition]);
+
+        res.status(200).json({ message: 'User removed from the queue' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
