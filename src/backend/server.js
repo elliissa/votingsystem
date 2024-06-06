@@ -106,6 +106,28 @@ app.post('/queue/advance', async (req, res) => {
     }
 });
 
+app.get('/candidates', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM candidates');
+        res.json({ candidates: result.rows});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/vote', async (req, res) => {
+    const { user_id, candidate_id } = req.body;
+    try {
+        const result = await pool.query('INSERT INTO votes(user_id, candidate_id) VALUES ($1, $2)', [user_id, candidate_id]);
+
+        res.status(200).json({ message: 'User voted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

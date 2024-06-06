@@ -10,6 +10,8 @@ export const WalletProvider = ({ children }) => {
     const [account, setAccount] = useState(null);
     const [role, setRole] = useState(null);
     const [position, setPosition] = useState(null);
+    const [candidates, setCandidates] = useState([]);
+
 
 
     useEffect(() => {
@@ -95,8 +97,30 @@ export const WalletProvider = ({ children }) => {
         return () => clearInterval(interval);
     }, [account]);
 
+
+    const fetchCandidates = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/candidates');
+            setCandidates(response.data.candidates);
+        } catch (error) {
+            console.error('Failed to fetch candidates', error);
+        }
+    };
+
+    const vote = async (candidate_id) => {
+        if (account) {
+            try {
+                await axios.post('http://localhost:5000/vote', { user_id: account, candidate_id });
+                alert('Vote submitted successfully');
+            } catch (error) {
+                console.error('Failed to vote', error);
+            }
+        }
+    };
+
+
     return (
-        <WalletContext.Provider value={{ wallet, account, role, position, signIn, signOut, joinQueue, advanceQueue }}>
+        <WalletContext.Provider value={{ wallet, account, role, position, candidates, signIn, signOut, joinQueue, advanceQueue, fetchCandidates, vote }}>
             {children}
         </WalletContext.Provider>
     );

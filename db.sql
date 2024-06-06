@@ -13,7 +13,9 @@ CREATE TABLE queue (
 
 CREATE TABLE candidates (
                             id SERIAL PRIMARY KEY,
-                            name VARCHAR(255) NOT NULL
+                            name VARCHAR(255) NOT NULL,
+                            user_id VARCHAR(255) UNIQUE NOT NULL,
+                            FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE votes (
@@ -23,6 +25,7 @@ CREATE TABLE votes (
                        FOREIGN KEY (user_id) REFERENCES users(user_id),
                        FOREIGN KEY (candidate_id) REFERENCES candidates(id)
 );
+
 
 CREATE INDEX idx_queue_user_id ON queue(user_id);
 CREATE INDEX idx_queue_position ON queue(position);
