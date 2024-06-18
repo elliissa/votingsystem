@@ -128,6 +128,34 @@ app.post('/vote', async (req, res) => {
     }
 });
 
+
+// Add candidate
+app.post('/candidates', async (req, res) => {
+    const { name, user_id } = req.body;
+    try {
+        const result = await pool.query('INSERT INTO candidates (name, user_id) VALUES ($1, $2) RETURNING *', [name, user_id]);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get vote count for a specific candidate
+app.get('/votes/count/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+    try {
+        const result = await pool.query('SELECT COUNT(*) FROM votes WHERE candidate_id = (SELECT id FROM candidates WHERE user_id = $1)', [user_id]);
+        res.json({ count: result.rows[0].count });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
