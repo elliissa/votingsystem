@@ -153,6 +153,30 @@ app.get('/votes/count/:user_id', async (req, res) => {
     }
 });
 
+// update user role
+app.post('/admin/updateRole', async (req, res) => {
+    const { user_id, new_role } = req.body;
+
+    try {
+        await pool.query('UPDATE users SET role = $1 WHERE user_id = $2', [new_role, user_id]);
+        res.json({ message: 'Role updated successfully' });
+    } catch (error) {
+        console.error('Error updating role:', error);
+        res.status(500).json({ error: 'Failed to update role' });
+    }
+});
+
+// get all users and their roles
+app.get('/admin/users', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT user_id, role FROM users');
+        res.json({ users: result.rows });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
 
 
 
