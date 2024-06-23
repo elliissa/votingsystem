@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { WalletContext } from './WalletContext';
+import './Candidate.css';
 
 const Candidate = () => {
     const { account } = useContext(WalletContext);
@@ -56,7 +57,7 @@ const Candidate = () => {
     };
 
     return (
-        <div>
+        <div className="candidate-container">
             <h1>Candidate Dashboard</h1>
             {isCandidate ? (
                 <div>
