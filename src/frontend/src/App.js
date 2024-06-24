@@ -50,6 +50,7 @@ const Main = () => {
                     <>
                         <p className="account-info">{account}</p>
                         {role && <p className="role-info">Role: {role}</p>}
+                        <p className="contact">Contact address: admin@gmail.com</p>
                         <button className="sign-out-btn" onClick={signOut}>Sign Out</button>
                     </>
                 ) : (

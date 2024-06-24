@@ -23,7 +23,7 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.account-info, .role-info {
+.account-info, .role-info, .contact {
   color: white;
   margin: 0 10px;
   font-weight: bold;
