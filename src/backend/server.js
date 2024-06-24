@@ -8,6 +8,10 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// In-memory store for tracking the first user's time
+let firstUserTime = null;
+let firstUserId = null;
+
 app.get('/auth/role/:accountId', async (req, res) => {
     const { accountId } = req.params;
     try {
@@ -98,6 +102,7 @@ app.post('/queue/advance', async (req, res) => {
         await pool.query('DELETE FROM queue WHERE user_id = $1', [user_id]);
 
         await pool.query('UPDATE queue SET position = position - 1 WHERE position > $1', [userPosition]);
+        updateFirstUserTime(); // Update first user time immediately after removal
 
         res.status(200).json({ message: 'User removed from the queue' });
     } catch (err) {
@@ -177,7 +182,54 @@ app.get('/admin/users', async (req, res) => {
     }
 });
 
+// Function to update the first user's time
+const updateFirstUserTime = async () => {
+    try {
+        const result = await pool.query(`
+            SELECT user_id
+            FROM queue
+            ORDER BY position
+            LIMIT 1
+        `);
 
+        if (result.rows.length > 0) {
+            const newFirstUserId = result.rows[0].user_id;
+            if (newFirstUserId !== firstUserId) {
+                firstUserId = newFirstUserId;
+                firstUserTime = new Date().toLocaleString();
+            }
+        } else {
+            firstUserId = null;
+            firstUserTime = null;
+        }
+    } catch (err) {
+        console.error('Error updating first user time:', err);
+    }
+};
+
+// Endpoint to get the first user's time
+app.get('/queue/first', (req, res) => {
+    res.json({ user_id: firstUserId, time: firstUserTime });
+});
+
+// Update first user's time every 10 seconds
+setInterval(updateFirstUserTime, 10000);
+
+// Endpoint to get users in the queue
+app.get('/queue/users', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT q.user_id, u.role, q.position
+            FROM queue q
+            JOIN users u ON q.user_id = u.user_id
+            ORDER BY q.position
+        `);
+        res.json({ queue: result.rows });
+    } catch (err) {
+        console.error('Failed to fetch queue users', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 app.listen(PORT, () => {
